@@ -36,12 +36,10 @@ except:
     fond_image = None
 
 class Cible:
-    def __init__(self, largeur, hauteur, y, vitesse_max=4):
-        self.largeur = largeur
-        self.hauteur = hauteur
+    def __init__(self, y, vitesse_max=4):
         self.y = y
-        self.taille = taille_cible
-        self.x = random.randint(0, largeur - self.taille)
+        self.taille = taille_cible            # variable globale
+        self.x = random.randint(0, largeur - self.taille)  # variable globale
         self.vx = random.choice([-vitesse_max, vitesse_max])
         self.visible = True
         self.cooldown = 1.5
@@ -51,21 +49,22 @@ class Cible:
         if not self.visible:
             if pygame.time.get_ticks() - self.disparition_start > self.cooldown * 1000:
                 self.visible = True
-                self.x = random.randint(0, self.largeur - self.taille)
+                self.x = random.randint(0, largeur - self.taille) 
                 self.vx = random.choice([-4, 4])
             return
+
         self.x += self.vx
         if self.x < 0:
             self.x = 0
             self.vx = -self.vx
-        elif self.x > self.largeur - self.taille:
-            self.x = self.largeur - self.taille
+        elif self.x > largeur - self.taille:
+            self.x = largeur - self.taille
             self.vx = -self.vx
 
     def draw(self, screen):
         if not self.visible:
             return
-        if target_image:
+        if target_image:  
             img_scaled = pygame.transform.scale(target_image, (self.taille, self.taille))
             screen.blit(img_scaled, (self.x, self.y))
         else:
@@ -83,14 +82,15 @@ class Cible:
 
 
 def reset_game():
-    global score, temps_restant, start_ticks, cibles, game_over
+    global score, temps_restant, start_ticks, cibles, game_over, fin
+    fin = False
     score = 0
     temps_restant = temps_total
     start_ticks = pygame.time.get_ticks()
     game_over = False
     # Créer 3 cibles sur des lignes différentes
     cibles = [
-        Cible(largeur, hauteur, zone_limite_y + i*100) for i in range(3)
+        Cible( zone_limite_y + i*100) for i in range(3)
     ]
 
 reset_game()
@@ -101,6 +101,7 @@ meilleur_score = 0
 nouveau_record = False
 red_screen = False
 red_frames = 0
+fin = False
 
 while True:
     for event in pygame.event.get():
@@ -113,7 +114,7 @@ while True:
                 game_started = True
                 reset_game()
         else:
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and fin == False:
                 pos = event.pos
                 touchee = False
                 for cible in cibles:
@@ -148,7 +149,6 @@ while True:
             if score > meilleur_score:
                 meilleur_score = score
                 nouveau_record = True
-            game_started = False
 
         if not game_over:
             # Mouvement et affichage cibles
@@ -169,7 +169,7 @@ while True:
                 if red_frames > 5:
                     red_screen = False
         else:
-            # Écran de fin
+            fin = True
             fin_text = large_font.render(f"Temps écoulé ! Score : {score}", True, blanc)
             screen.blit(fin_text, fin_text.get_rect(center=(largeur // 2, hauteur // 2 - 50)))
 
